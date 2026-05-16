@@ -1,3 +1,19 @@
+## [3.0.0] - 2026-05-16
+
+### 🐛 Bug Fixes
+
+- Grant release workflow write permissions by @rainxinc
+
+- Inherit secrets for release updater workflow by @rainxinc
+
+### 💅 Styling
+
+- Format deno config by @rainxinc
+
+---
+
+**Full Changelog**: https://github.com/rainxinc/clash-nyanpasu/compare/v2.0.1...v3.0.0
+
 ## [2.0.1] - 2026-05-16
 
 ### 💥 Breaking Changes
