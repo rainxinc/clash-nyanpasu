@@ -32,6 +32,10 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24
+      - name: Prepare Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
       - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
@@ -54,29 +58,28 @@ jobs:
       - id: update-version
         shell: bash
         name: Bump version
-        # Use npm because yarn is for some reason not able to output only the version name
         run: |
-          echo "version=$(pnpm run publish ${{ inputs.versionType }} | tail -n1)" >> $GITHUB_OUTPUT
+          VERSION="$(pnpm --silent run publish ${{ inputs.versionType }})"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid version output: $VERSION"
+            exit 1
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
           git add .
       - name: Generate a changelog for the new version
         shell: bash
         id: build-changelog
         run: |
           touch /tmp/changelog.md
-          git-cliff --config  cliff.toml --verbose --strip header --unreleased --tag v${{ steps.update-version.outputs.version }} > /tmp/changelog.md
-          if [ $? -eq 0 ]; then
-            CONTENT=$(cat /tmp/changelog.md)
-            cat /tmp/changelog.md | cat - ./CHANGELOG.md > temp && mv temp ./CHANGELOG.md
-            {
-              echo 'content<<EOF'
-              echo "$CONTENT"
-              echo EOF
-            } >> $GITHUB_OUTPUT
-            echo "version=${{ steps.update-version.outputs.version }}" >> $GITHUB_OUTPUT
-          else
-            echo "Failed to generate changelog"
-            exit 1
-          fi
+          git-cliff --config cliff.toml --verbose --strip header --unreleased --tag "v${{ steps.update-version.outputs.version }}" > /tmp/changelog.md
+          CONTENT=$(cat /tmp/changelog.md)
+          cat /tmp/changelog.md | cat - ./CHANGELOG.md > temp && mv temp ./CHANGELOG.md
+          {
+            echo 'content<<EOF'
+            echo "$CONTENT"
+            echo EOF
+          } >> $GITHUB_OUTPUT
+          echo "version=${{ steps.update-version.outputs.version }}" >> $GITHUB_OUTPUT
         env:
           GITHUB_REPO: ${{ github.repository }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
