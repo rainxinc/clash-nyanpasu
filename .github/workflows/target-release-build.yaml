@@ -60,6 +60,7 @@ jobs:
 
   updater:
     name: Create Updater
+    if: startsWith(github.repository, 'libnyanpasu')
     needs: [upload_release_assets]
     uses: ./.github/workflows/deps-create-updater.yaml
     with:

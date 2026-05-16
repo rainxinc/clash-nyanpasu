@@ -122,11 +122,15 @@ jobs:
       - name: Build Clash Nyanpasu (Stable)
         if: ${{ inputs.nightly == false }}
         run: |
-          pnpm tauri build --verbose -f default-meta ${{ inputs.aarch64 == true && '--target aarch64-apple-darwin' || '--target x86_64-apple-darwin' }}
+          if [ "${{ github.repository }}" = "libnyanpasu/clash-nyanpasu" ]; then
+            pnpm tauri build --verbose -f default-meta ${{ inputs.aarch64 == true && '--target aarch64-apple-darwin' || '--target x86_64-apple-darwin' }}
+          else
+            pnpm tauri build --verbose -f default-meta -c '{ "bundle": { "createUpdaterArtifacts": false } }' ${{ inputs.aarch64 == true && '--target aarch64-apple-darwin' || '--target x86_64-apple-darwin' }}
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ github.repository == 'libnyanpasu/clash-nyanpasu' && secrets.TAURI_PRIVATE_KEY || '' }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ github.repository == 'libnyanpasu/clash-nyanpasu' && secrets.TAURI_KEY_PASSWORD || '' }}
           NIGHTLY: ${{ inputs.nightly == true  && 'true' || 'false' }}
           NODE_OPTIONS: '--max_old_space_size=4096'
       - name: Build Clash Nyanpasu (Nightly)
